@@ -6,8 +6,8 @@ set tab1Dir to "/Users/ludell/Documents/Privat/prosjekter/godtur/godtur_api"
 set tab2Dir to "/Users/ludell/Documents/Privat/prosjekter/godtur/godtur_api"
 set tab3Dir to "/Users/ludell/Documents/Privat/prosjekter/godtur/godtur_weather_api"
 set tab4Dir to "/Users/ludell/Documents/Privat/prosjekter/godtur/godtur_weather_api"
-set tab5Dir to "/Users/ludell/Documents/Privat/prosjekter/godtur/godtur_web_two"
-set tab6Dir to "/Users/ludell/Documents/Privat/prosjekter/godtur/godtur_web_two"
+set tab5Dir to "/Users/ludell/Documents/Privat/prosjekter/godtur/godtur_web_two/godtur"
+set tab6Dir to "/Users/ludell/Documents/Privat/prosjekter/godtur/godtur_web_two/godtur"
 
 tell application "Ghostty"
     activate
