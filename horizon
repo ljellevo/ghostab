@@ -21,7 +21,7 @@ tell application "Ghostty"
     set win to new window with configuration cfg1
     delay 0.3
     set term to focused terminal of selected tab of win
-    perform action "set_tab_title" on term
+    perform action "set_tab_title:frontend" on term
 
     -- Tab 2
     set cfg2 to new surface configuration
