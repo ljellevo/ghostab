@@ -18,7 +18,7 @@ If you use [Ghostty](https://ghostty.org) on macOS and juggle multiple projects,
 ## 📦 Installation
 
 ```sh
-curl -fsSL https://github.com/ljellevo/ghostab/releases/latest/download/install.sh | sh
+source <(curl -fsSL https://github.com/ljellevo/ghostab/releases/latest/download/install.sh)
 ```
 
 ---

@@ -74,6 +74,7 @@ cmd_delete() {
 # Global arrays used by generate_script (avoids bash 3.2 nameref limitation)
 _GEN_DIRS=()
 _GEN_TITLES=()
+_GEN_COUNTS=()
 
 generate_script() {
     local n=${#_GEN_DIRS[@]}
@@ -84,14 +85,15 @@ generate_script() {
     printf "osascript <<'EOF'\n"
     printf '\n'
 
-    # Declare directory variables (two per subdir)
+    # Declare directory variables
     local tab_num=1
-    local i
+    local i j
     for (( i=0; i<n; i++ )); do
-        printf 'set tab%sDir to "%s"\n' "$tab_num" "${_GEN_DIRS[$i]}"
-        (( tab_num++ ))
-        printf 'set tab%sDir to "%s"\n' "$tab_num" "${_GEN_DIRS[$i]}"
-        (( tab_num++ ))
+        local count="${_GEN_COUNTS[$i]}"
+        for (( j=0; j<count; j++ )); do
+            printf 'set tab%sDir to "%s"\n' "$tab_num" "${_GEN_DIRS[$i]}"
+            (( tab_num++ ))
+        done
     done
 
     printf '\n'
@@ -101,33 +103,25 @@ generate_script() {
     tab_num=1
     for (( i=0; i<n; i++ )); do
         local title="${_GEN_TITLES[$i]}"
+        local count="${_GEN_COUNTS[$i]}"
 
-        # First of the pair
-        printf '\n'
-        printf '    -- Tab %s\n' "$tab_num"
-        printf '    set cfg%s to new surface configuration\n' "$tab_num"
-        printf '    set initial working directory of cfg%s to tab%sDir\n' "$tab_num" "$tab_num"
-        if (( tab_num == 1 )); then
-            printf '    set win to new window with configuration cfg1\n'
-            printf '    delay 0.3\n'
-            printf '    set term to focused terminal of selected tab of win\n'
-            printf '    perform action "set_tab_title:%s" on term\n' "$title"
-        else
-            printf '    set t%s to new tab in win with configuration cfg%s\n' "$tab_num" "$tab_num"
-            printf '    delay 0.3\n'
-            printf '    perform action "set_tab_title:%s" on focused terminal of t%s\n' "$title" "$tab_num"
-        fi
-        (( tab_num++ ))
-
-        # Second of the pair
-        printf '\n'
-        printf '    -- Tab %s\n' "$tab_num"
-        printf '    set cfg%s to new surface configuration\n' "$tab_num"
-        printf '    set initial working directory of cfg%s to tab%sDir\n' "$tab_num" "$tab_num"
-        printf '    set t%s to new tab in win with configuration cfg%s\n' "$tab_num" "$tab_num"
-        printf '    delay 0.3\n'
-        printf '    perform action "set_tab_title:%s" on focused terminal of t%s\n' "$title" "$tab_num"
-        (( tab_num++ ))
+        for (( j=0; j<count; j++ )); do
+            printf '\n'
+            printf '    -- Tab %s\n' "$tab_num"
+            printf '    set cfg%s to new surface configuration\n' "$tab_num"
+            printf '    set initial working directory of cfg%s to tab%sDir\n' "$tab_num" "$tab_num"
+            if (( tab_num == 1 )); then
+                printf '    set win to new window with configuration cfg1\n'
+                printf '    delay 0.3\n'
+                printf '    set term to focused terminal of selected tab of win\n'
+                printf '    perform action "set_tab_title:%s" on term\n' "$title"
+            else
+                printf '    set t%s to new tab in win with configuration cfg%s\n' "$tab_num" "$tab_num"
+                printf '    delay 0.3\n'
+                printf '    perform action "set_tab_title:%s" on focused terminal of t%s\n' "$title" "$tab_num"
+            fi
+            (( tab_num++ ))
+        done
     done
 
     printf '\n'
@@ -193,15 +187,41 @@ cmd_create() {
 
     _GEN_TITLES=()
     _GEN_DIRS=()
+    _GEN_COUNTS=()
     for d in "${safe_subdirs[@]}"; do
-        local dname
+        local dname title first rest count_input
         dname="$(basename "$d")"
-        read -r -p "  Tab title for '$dname' (Enter to skip): " title
+
+        printf "  Tab title for '%s': " "$dname"
+        IFS= read -r -s -n1 first </dev/tty
+
+        if [[ "$first" == $'\033' ]]; then
+            while IFS= read -r -s -n1 -t 0.05 _ </dev/tty 2>/dev/null; do :; done
+            echo "(skipped)"
+            continue
+        fi
+
+        if [[ -z "$first" ]]; then
+            echo
+            continue
+        fi
+
+        printf '%s' "$first"
+        IFS= read -r rest </dev/tty
+        title="$first$rest"
+
         [[ -z "$title" ]] && continue
         # Strip colons (AppleScript set_tab_title uses colon as delimiter)
         title="${title//:/}"
+
+        printf "  Number of tabs for '%s' [1]: " "$dname"
+        IFS= read -r count_input </dev/tty
+        count_input="${count_input:-1}"
+        [[ "$count_input" =~ ^[1-9][0-9]*$ ]] || count_input=1
+
         _GEN_TITLES+=("$title")
         _GEN_DIRS+=("$d")
+        _GEN_COUNTS+=("$count_input")
     done
 
     if (( ${#_GEN_DIRS[@]} == 0 )); then

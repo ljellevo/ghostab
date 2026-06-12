@@ -48,10 +48,12 @@ main() {
   # Add ~/.ghostab to PATH in shell profile (for generated presets)
   add_presets_to_path
 
+  # Export to the current session (takes effect when the script is sourced)
+  export PATH="$PATH:$PRESETS_DIR"
+
   echo ""
   echo "ghostab installed to $INSTALL_DIR/$SCRIPT"
   echo "Presets will be stored in $PRESETS_DIR"
-  echo "Restart your shell (or run: export PATH=\"\$PATH:$PRESETS_DIR\") to use generated presets."
   echo ""
   echo "Then run: ghostab -h"
 }
