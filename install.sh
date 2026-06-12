@@ -9,12 +9,19 @@ main() {
 
   printf 'Install location [%s]: ' "$DEFAULT_DIR"
   read -r INSTALL_DIR </dev/tty
-  INSTALL_DIR="${INSTALL_DIR:-$DEFAULT_DIR}"
-
-  # Expand ~ manually since it may not expand inside a variable
-  case "$INSTALL_DIR" in
-    "~"*) INSTALL_DIR="$HOME${INSTALL_DIR#\~}" ;;
-  esac
+  if [ -z "$INSTALL_DIR" ]; then
+    INSTALL_DIR="$DEFAULT_DIR"
+  else
+    # Prepend ~/ unless the path already starts with ~
+    case "$INSTALL_DIR" in
+      "~"*) ;;
+      *) INSTALL_DIR="~/$INSTALL_DIR" ;;
+    esac
+    # Expand leading ~
+    case "$INSTALL_DIR" in
+      "~"*) INSTALL_DIR="$HOME${INSTALL_DIR#\~}" ;;
+    esac
+  fi
 
   CUSTOM_DIR=0
   if [ "$INSTALL_DIR" != "$DEFAULT_DIR" ]; then
