@@ -35,7 +35,7 @@ Say you have a `~/projects` directory with three subdirectories:
 └── infra/
 ```
 
-Running `create-ghostty-tabs ~/projects` prompts you for a title for each folder:
+Running `ghostab ~/projects` prompts you for a title for each folder:
 
 ```
 Title for 'backend'  [backend]: API
