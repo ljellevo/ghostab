@@ -26,31 +26,37 @@ then either run `source ~/.zscrc` or reload the shell for the paths to take effe
 
 ## 🗂️ Example
 
-Say you have a `~/projects` directory with three subdirectories:
+Say you have a `~/my-project` directory with three subdirectories:
 
 ```
-~/projects/
+~/my-project/
 ├── backend/
 ├── frontend/
 └── infra/
 ```
 
-Running `ghostab ~/projects` prompts you for a title for each folder:
+Running `ghostab ~/my-project` prompts you for a title and tab count for each folder (alternatively you can just call `ghostab .` if you're already in the `my-project` directory) like so:
 
 ```
-Title for 'backend'  [backend]: API
-Title for 'frontend' [frontend]: UI
-Title for 'infra'    [infra]: Infra
-Script name: myapp
+Found 3 subdirectories in '/Users/you/my-project'.
+Enter a tab title for each directory:
+  [Enter] skip   [Esc] skip
+
+  Tab title for 'backend': API
+  Number of tabs for 'backend' [1]: 2
+  Tab title for 'frontend': UI
+  Number of tabs for 'frontend' [1]: 1
+  Tab title for 'infra': Infra
+  Number of tabs for 'infra' [1]: 1
 ```
 
-This generates a script called `myapp`. The next time you want to start work, just run:
+This generates a script called `my-project` (name of the folder the ghostab CLI was run from). The next time you want to start work, just run:
 
 ```bash
-myapp
+my-project
 ```
 
-Ghostty opens a new window with three tabs — **API**, **UI**, and **Infra** — each already `cd`'d into the right directory.
+Ghostty opens a new window with four tabs — **API** (×2), **UI**, and **Infra** — each already `cd`'d into the right directory.
 
 ---
 
@@ -62,7 +68,7 @@ Ghostty opens a new window with three tabs — **API**, **UI**, and **Infra** �
 ghostab /path/to/your/projects
 ```
 
-You'll be prompted to enter a tab title for each subdirectory. The generated script is saved to this repo and becomes immediately available on your PATH.
+You'll be prompted for a title and tab count for each subdirectory. Press Enter or Esc to skip a folder. The generated preset is saved to `~/.ghostab` and immediately available on your PATH.
 
 **Launch a preset** — just call it by name from any terminal:
 
