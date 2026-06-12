@@ -1,8 +1,2 @@
-# Ignore everything
-*
 
-# Except these files
-!.gitignore
-!CLAUDE.md
-!README.md
-!ghostab
+
