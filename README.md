@@ -18,8 +18,9 @@ If you use [Ghostty](https://ghostty.org) on macOS and juggle multiple projects,
 ## 📦 Installation
 
 ```sh
-source <(curl -fsSL https://github.com/ljellevo/ghostab/releases/latest/download/install.sh)
+curl -fsSL https://github.com/ljellevo/ghostab/releases/latest/download/install.sh
 ```
+then either run `source ~/.zscrc` or reload the shell for the paths to take effect 
 
 ---
 
