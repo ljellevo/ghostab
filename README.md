@@ -62,10 +62,10 @@ Ghostty opens a new window with four tabs — **API** (×2), **UI**, and **Infra
 
 ## 🚀 Usage
 
-**Create a preset** from a directory of projects:
+**Create a preset** from a parent directory containing subdirectories you want to open as tabs:
 
 ```bash
-ghostab /path/to/your/projects
+ghostab /path/to/your/project
 ```
 
 You'll be prompted for a title and tab count for each subdirectory. Press Enter or Esc to skip a folder. The generated preset is saved to `~/.ghostab` and immediately available on your PATH.
