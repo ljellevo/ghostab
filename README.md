@@ -50,7 +50,7 @@ Ghostty opens a new window with three tabs â€” **API**, **UI**, and **Infra** â€
 **Create a preset** from a directory of projects:
 
 ```bash
-create-ghostty-tabs /path/to/your/projects
+ghostab /path/to/your/projects
 ```
 
 You'll be prompted to enter a tab title for each subdirectory. The generated script is saved to this repo and becomes immediately available on your PATH.
@@ -64,19 +64,19 @@ my-preset-name
 **List all presets:**
 
 ```bash
-create-ghostty-tabs -l
+ghostab -l
 ```
 
 **Delete a preset:**
 
 ```bash
-create-ghostty-tabs -d <name>
+ghostab -d <name>
 ```
 
 **Show all options:**
 
 ```bash
-create-ghostty-tabs -h
+ghostab -h
 ```
 
 ---
@@ -93,7 +93,7 @@ cd ghostab
 **2. Make the tool executable**
 
 ```bash
-chmod +x create-ghostty-tabs
+chmod +x ghostab
 ```
 
 **3. Add the repo to your PATH**
