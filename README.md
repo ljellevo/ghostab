@@ -15,6 +15,14 @@ If you use [Ghostty](https://ghostty.org) on macOS and juggle multiple projects,
 
 ---
 
+## 📦 Installation
+
+```sh
+curl -fsSL https://github.com/ljellevo/ghostab/releases/latest/download/install.sh | sh
+```
+
+---
+
 ## 🗂️ Example
 
 Say you have a `~/projects` directory with three subdirectories:
@@ -77,37 +85,6 @@ ghostab -d <name>
 
 ```bash
 ghostab -h
-```
-
----
-
-## 📦 Installation
-
-**1. Clone the repo**
-
-```bash
-git clone https://github.com/ljellevo/ghostab.git
-cd ghostab
-```
-
-**2. Make the tool executable**
-
-```bash
-chmod +x ghostab
-```
-
-**3. Add the repo to your PATH**
-
-Append the following to your `~/.zprofile` (use `pwd` inside the repo to get the correct path):
-
-```bash
-export PATH="$PATH:/path/to/ghostab"
-```
-
-Then reload your shell:
-
-```bash
-source ~/.zprofile
 ```
 
 ---
