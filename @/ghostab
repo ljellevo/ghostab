@@ -1,0 +1,243 @@
+#!/bin/bash
+# ghostab: meta
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+    cat <<'HELP'
+create-ghostty-tabs — generate Ghostty tab-preset scripts from a directory
+
+Usage:
+  create-ghostty-tabs [PATH]    Scan PATH for subdirs and create a tab-preset script
+                                (defaults to current directory if PATH is omitted)
+  create-ghostty-tabs -l        List all tab-preset scripts in the repo
+  create-ghostty-tabs -d NAME   Delete the named tab-preset script
+  create-ghostty-tabs -h        Show this help
+
+How it works:
+  Given a directory, each immediate subdirectory becomes two tabs in a new
+  Ghostty window. You are prompted to name each tab. The generated script is
+  saved to the ghostab repo directory (the same folder as this
+  script) and made executable, so you can call it by name from anywhere.
+
+Examples:
+  create-ghostty-tabs ~/projects/myapp
+  create-ghostty-tabs -l
+  create-ghostty-tabs -d myapp
+HELP
+}
+
+cmd_list() {
+    local found=0
+    for f in "$REPO_DIR"/*; do
+        [[ -f "$f" && -x "$f" ]] || continue
+        sed -n '2p' "$f" 2>/dev/null | grep -q "ghostab: generated" || continue
+        echo "$(basename "$f")"
+        found=1
+    done
+    (( found )) || echo "(no tab-preset scripts found)"
+}
+
+cmd_delete() {
+    local name
+    name="$(basename "${1:-}")"
+
+    if [[ -z "$name" ]]; then
+        echo "Error: -d requires a script name" >&2
+        echo "Usage: create-ghostty-tabs -d NAME" >&2
+        exit 1
+    fi
+
+    local target="$REPO_DIR/$name"
+
+    if [[ ! -f "$target" ]]; then
+        echo "Error: no script named '$name' found" >&2
+        exit 1
+    fi
+
+    if ! sed -n '2p' "$target" | grep -q "ghostab: generated"; then
+        echo "Error: '$name' is not a generated tab-preset script" >&2
+        exit 1
+    fi
+
+    read -r -p "Delete '$name'? [y/N] " confirm
+    case "$confirm" in
+        y|Y)
+            rm "$target" && echo "Deleted '$name'."
+            ;;
+        *)
+            echo "Cancelled."
+            ;;
+    esac
+}
+
+# Global arrays used by generate_script (avoids bash 3.2 nameref limitation)
+_GEN_DIRS=()
+_GEN_TITLES=()
+
+generate_script() {
+    local n=${#_GEN_DIRS[@]}
+
+    printf '#!/bin/bash\n'
+    printf '# ghostab: generated\n'
+    printf '\n'
+    printf "osascript <<'EOF'\n"
+    printf '\n'
+
+    # Declare directory variables (two per subdir)
+    local tab_num=1
+    local i
+    for (( i=0; i<n; i++ )); do
+        printf 'set tab%sDir to "%s"\n' "$tab_num" "${_GEN_DIRS[$i]}"
+        (( tab_num++ ))
+        printf 'set tab%sDir to "%s"\n' "$tab_num" "${_GEN_DIRS[$i]}"
+        (( tab_num++ ))
+    done
+
+    printf '\n'
+    printf 'tell application "Ghostty"\n'
+    printf '    activate\n'
+
+    tab_num=1
+    for (( i=0; i<n; i++ )); do
+        local title="${_GEN_TITLES[$i]}"
+
+        # First of the pair
+        printf '\n'
+        printf '    -- Tab %s\n' "$tab_num"
+        printf '    set cfg%s to new surface configuration\n' "$tab_num"
+        printf '    set initial working directory of cfg%s to tab%sDir\n' "$tab_num" "$tab_num"
+        if (( tab_num == 1 )); then
+            printf '    set win to new window with configuration cfg1\n'
+            printf '    delay 0.3\n'
+            printf '    set term to focused terminal of selected tab of win\n'
+            printf '    perform action "set_tab_title:%s" on term\n' "$title"
+        else
+            printf '    set t%s to new tab in win with configuration cfg%s\n' "$tab_num" "$tab_num"
+            printf '    delay 0.3\n'
+            printf '    perform action "set_tab_title:%s" on focused terminal of t%s\n' "$title" "$tab_num"
+        fi
+        (( tab_num++ ))
+
+        # Second of the pair
+        printf '\n'
+        printf '    -- Tab %s\n' "$tab_num"
+        printf '    set cfg%s to new surface configuration\n' "$tab_num"
+        printf '    set initial working directory of cfg%s to tab%sDir\n' "$tab_num" "$tab_num"
+        printf '    set t%s to new tab in win with configuration cfg%s\n' "$tab_num" "$tab_num"
+        printf '    delay 0.3\n'
+        printf '    perform action "set_tab_title:%s" on focused terminal of t%s\n' "$title" "$tab_num"
+        (( tab_num++ ))
+    done
+
+    printf '\n'
+    printf '    -- Focus the first tab\n'
+    printf '    select tab (tab 1 of win)\n'
+    printf 'end tell\n'
+    printf 'EOF\n'
+}
+
+cmd_create() {
+    local raw_path="${1:-.}"
+
+    # Resolve to absolute path
+    local scan_path
+    scan_path="$(cd "$raw_path" 2>/dev/null && pwd)" || {
+        echo "Error: directory '$raw_path' not found" >&2
+        exit 1
+    }
+
+    local script_name
+    script_name="$(basename "$scan_path")"
+
+    if [[ -z "$script_name" || "$script_name" == "/" ]]; then
+        echo "Error: cannot determine script name from '$scan_path'" >&2
+        exit 1
+    fi
+
+    if [[ "$script_name" == "create-ghostty-tabs" ]]; then
+        echo "Error: script name 'create-ghostty-tabs' is reserved" >&2
+        exit 1
+    fi
+
+    # Gather immediate subdirectories, sorted
+    local -a subdirs
+    while IFS= read -r -d '' d; do
+        subdirs+=("$d")
+    done < <(find "$scan_path" -mindepth 1 -maxdepth 1 -type d -print0 | sort -zV)
+
+    if (( ${#subdirs[@]} == 0 )); then
+        echo "Error: no subdirectories found in '$scan_path'" >&2
+        exit 1
+    fi
+
+    # Filter out paths with single quotes (would break the AppleScript heredoc)
+    local -a safe_subdirs
+    for d in "${subdirs[@]}"; do
+        if [[ "$d" == *"'"* ]]; then
+            echo "Warning: skipping '$d' (single quote in path not supported)"
+        else
+            safe_subdirs+=("$d")
+        fi
+    done
+
+    if (( ${#safe_subdirs[@]} == 0 )); then
+        echo "Error: no valid subdirectories remain after filtering" >&2
+        exit 1
+    fi
+
+    # Prompt for tab titles
+    echo "Found ${#safe_subdirs[@]} subdirectories in '$scan_path'."
+    echo "Enter a tab title for each (press Enter to skip, type a name to include):"
+    echo
+
+    _GEN_TITLES=()
+    _GEN_DIRS=()
+    for d in "${safe_subdirs[@]}"; do
+        local dname
+        dname="$(basename "$d")"
+        read -r -p "  Tab title for '$dname' (Enter to skip): " title
+        [[ -z "$title" ]] && continue
+        # Strip colons (AppleScript set_tab_title uses colon as delimiter)
+        title="${title//:/}"
+        _GEN_TITLES+=("$title")
+        _GEN_DIRS+=("$d")
+    done
+
+    if (( ${#_GEN_DIRS[@]} == 0 )); then
+        echo "No tabs selected. Cancelled."
+        exit 0
+    fi
+
+    # Overwrite check
+    local out_path="$REPO_DIR/$script_name"
+    if [[ -f "$out_path" ]]; then
+        read -r -p "Script '$script_name' already exists. Overwrite? [y/N] " confirm
+        case "$confirm" in
+            y|Y) ;;
+            *) echo "Cancelled." ; exit 0 ;;
+        esac
+    fi
+
+    # Write to temp file, then move atomically
+    local tmpfile
+    tmpfile="$(mktemp)"
+    trap 'rm -f "$tmpfile"' EXIT INT TERM
+
+    generate_script > "$tmpfile"
+    mv "$tmpfile" "$out_path"
+    chmod ug+x "$out_path"
+
+    echo
+    echo "Created '$script_name' — call it from anywhere to open your Ghostty workspace."
+    echo "To make it callable, ensure this is in your shell profile:"
+    echo "  export PATH=\"\$PATH:$REPO_DIR\""
+}
+
+# Entry point
+case "$1" in
+    -h|--help) usage ;;
+    -l)        cmd_list ;;
+    -d)        cmd_delete "$2" ;;
+    *)         cmd_create "${1:-}" ;;
+esac

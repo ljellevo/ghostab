@@ -27,8 +27,16 @@ main() {
   fi
 
   echo "Downloading ghostab..."
-  curl -fsSL "$URL" -o "$INSTALL_DIR/$SCRIPT"
-  chmod +x "$INSTALL_DIR/$SCRIPT"
+  TMP="$(mktemp)"
+  curl -fsSL "$URL" -o "$TMP"
+  chmod +x "$TMP"
+
+  if [ -w "$INSTALL_DIR" ]; then
+    mv "$TMP" "$INSTALL_DIR/$SCRIPT"
+  else
+    echo "Installing to $INSTALL_DIR (requires sudo)..."
+    sudo mv "$TMP" "$INSTALL_DIR/$SCRIPT"
+  fi
 
   if [ "$CUSTOM_DIR" = "1" ]; then
     add_to_path
