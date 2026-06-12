@@ -1,5 +1,5 @@
 #!/bin/bash
-# ghostty-tab-preset: meta
+# ghostab: meta
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -17,7 +17,7 @@ Usage:
 How it works:
   Given a directory, each immediate subdirectory becomes two tabs in a new
   Ghostty window. You are prompted to name each tab. The generated script is
-  saved to the ghostty-tab-preset repo directory (the same folder as this
+  saved to the ghostab repo directory (the same folder as this
   script) and made executable, so you can call it by name from anywhere.
 
 Examples:
@@ -31,7 +31,7 @@ cmd_list() {
     local found=0
     for f in "$REPO_DIR"/*; do
         [[ -f "$f" && -x "$f" ]] || continue
-        sed -n '2p' "$f" 2>/dev/null | grep -q "ghostty-tab-preset: generated" || continue
+        sed -n '2p' "$f" 2>/dev/null | grep -q "ghostab: generated" || continue
         echo "$(basename "$f")"
         found=1
     done
@@ -55,7 +55,7 @@ cmd_delete() {
         exit 1
     fi
 
-    if ! sed -n '2p' "$target" | grep -q "ghostty-tab-preset: generated"; then
+    if ! sed -n '2p' "$target" | grep -q "ghostab: generated"; then
         echo "Error: '$name' is not a generated tab-preset script" >&2
         exit 1
     fi
@@ -79,7 +79,7 @@ generate_script() {
     local n=${#_GEN_DIRS[@]}
 
     printf '#!/bin/bash\n'
-    printf '# ghostty-tab-preset: generated\n'
+    printf '# ghostab: generated\n'
     printf '\n'
     printf "osascript <<'EOF'\n"
     printf '\n'
