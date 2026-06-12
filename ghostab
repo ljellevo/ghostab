@@ -5,14 +5,14 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
     cat <<'HELP'
-create-ghostty-tabs — generate Ghostty tab-preset scripts from a directory
+ghostab — generate Ghostty tab-preset scripts from a directory
 
 Usage:
-  create-ghostty-tabs [PATH]    Scan PATH for subdirs and create a tab-preset script
+  ghostab [PATH]    Scan PATH for subdirs and create a tab-preset script
                                 (defaults to current directory if PATH is omitted)
-  create-ghostty-tabs -l        List all tab-preset scripts in the repo
-  create-ghostty-tabs -d NAME   Delete the named tab-preset script
-  create-ghostty-tabs -h        Show this help
+  ghostab -l        List all tab-preset scripts in the repo
+  ghostab -d NAME   Delete the named tab-preset script
+  ghostab -h        Show this help
 
 How it works:
   Given a directory, each immediate subdirectory becomes two tabs in a new
@@ -21,9 +21,9 @@ How it works:
   script) and made executable, so you can call it by name from anywhere.
 
 Examples:
-  create-ghostty-tabs ~/projects/myapp
-  create-ghostty-tabs -l
-  create-ghostty-tabs -d myapp
+  ghostab ~/projects/myapp
+  ghostab -l
+  ghostab -d myapp
 HELP
 }
 
@@ -44,7 +44,7 @@ cmd_delete() {
 
     if [[ -z "$name" ]]; then
         echo "Error: -d requires a script name" >&2
-        echo "Usage: create-ghostty-tabs -d NAME" >&2
+        echo "Usage: ghostab -d NAME" >&2
         exit 1
     fi
 
@@ -155,8 +155,8 @@ cmd_create() {
         exit 1
     fi
 
-    if [[ "$script_name" == "create-ghostty-tabs" ]]; then
-        echo "Error: script name 'create-ghostty-tabs' is reserved" >&2
+    if [[ "$script_name" == "ghostab" ]]; then
+        echo "Error: script name 'ghostab' is reserved" >&2
         exit 1
     fi
 
