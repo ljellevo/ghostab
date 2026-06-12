@@ -1,7 +1,7 @@
 #!/bin/bash
 # ghostab: meta
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PRESETS_DIR="$HOME/.ghostab"
 
 usage() {
     cat <<'HELP'
@@ -17,8 +17,8 @@ Usage:
 How it works:
   Given a directory, each immediate subdirectory becomes two tabs in a new
   Ghostty window. You are prompted to name each tab. The generated script is
-  saved to the ghostab repo directory (the same folder as this
-  script) and made executable, so you can call it by name from anywhere.
+  saved to ~/.ghostab and made executable, so you can call it by name
+  from anywhere (as long as ~/.ghostab is on your PATH).
 
 Examples:
   ghostab ~/projects/myapp
@@ -29,7 +29,7 @@ HELP
 
 cmd_list() {
     local found=0
-    for f in "$REPO_DIR"/*; do
+    for f in "$PRESETS_DIR"/*; do
         [[ -f "$f" && -x "$f" ]] || continue
         sed -n '2p' "$f" 2>/dev/null | grep -q "ghostab: generated" || continue
         echo "$(basename "$f")"
@@ -48,7 +48,7 @@ cmd_delete() {
         exit 1
     fi
 
-    local target="$REPO_DIR/$name"
+    local target="$PRESETS_DIR/$name"
 
     if [[ ! -f "$target" ]]; then
         echo "Error: no script named '$name' found" >&2
@@ -209,8 +209,10 @@ cmd_create() {
         exit 0
     fi
 
+    mkdir -p "$PRESETS_DIR"
+
     # Overwrite check
-    local out_path="$REPO_DIR/$script_name"
+    local out_path="$PRESETS_DIR/$script_name"
     if [[ -f "$out_path" ]]; then
         read -r -p "Script '$script_name' already exists. Overwrite? [y/N] " confirm
         case "$confirm" in
@@ -229,9 +231,7 @@ cmd_create() {
     chmod ug+x "$out_path"
 
     echo
-    echo "Created '$script_name' — call it from anywhere to open your Ghostty workspace."
-    echo "To make it callable, ensure this is in your shell profile:"
-    echo "  export PATH=\"\$PATH:$REPO_DIR\""
+    echo "Created '$script_name' in ~/.ghostab — call it from anywhere to open your Ghostty workspace."
 }
 
 # Entry point

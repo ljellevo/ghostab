@@ -4,13 +4,15 @@ set -e
 main() {
   REPO="ljellevo/ghostab"
   SCRIPT="ghostab"
-  DEFAULT_DIR="/usr/local/bin"
+  PRESETS_DIR="$HOME/.ghostab"
+  DEFAULT_BIN="/usr/local/bin"
   URL="https://github.com/$REPO/releases/latest/download/$SCRIPT"
 
-  printf 'Install location [%s]: ' "$DEFAULT_DIR"
+  printf 'Install location [%s]: ' "$DEFAULT_BIN"
   read -r INSTALL_DIR </dev/tty
+
   if [ -z "$INSTALL_DIR" ]; then
-    INSTALL_DIR="$DEFAULT_DIR"
+    INSTALL_DIR="$DEFAULT_BIN"
   else
     # Prepend ~/ unless the path already starts with ~
     case "$INSTALL_DIR" in
@@ -21,11 +23,6 @@ main() {
     case "$INSTALL_DIR" in
       "~"*) INSTALL_DIR="$HOME${INSTALL_DIR#\~}" ;;
     esac
-  fi
-
-  CUSTOM_DIR=0
-  if [ "$INSTALL_DIR" != "$DEFAULT_DIR" ]; then
-    CUSTOM_DIR=1
   fi
 
   if [ ! -d "$INSTALL_DIR" ]; then
@@ -45,34 +42,34 @@ main() {
     sudo mv "$TMP" "$INSTALL_DIR/$SCRIPT"
   fi
 
-  if [ "$CUSTOM_DIR" = "1" ]; then
-    add_to_path
-    echo ""
-    echo "ghostab installed to $INSTALL_DIR/$SCRIPT"
-    echo "Restart your shell (or run: export PATH=\"\$PATH:$INSTALL_DIR\") to use it."
-  else
-    echo ""
-    echo "ghostab installed to $INSTALL_DIR/$SCRIPT"
-  fi
+  # Create the presets directory
+  mkdir -p "$PRESETS_DIR"
 
+  # Add ~/.ghostab to PATH in shell profile (for generated presets)
+  add_presets_to_path
+
+  echo ""
+  echo "ghostab installed to $INSTALL_DIR/$SCRIPT"
+  echo "Presets will be stored in $PRESETS_DIR"
+  echo "Restart your shell (or run: export PATH=\"\$PATH:$PRESETS_DIR\") to use generated presets."
   echo ""
   echo "Then run: ghostab -h"
 }
 
-add_to_path() {
+add_presets_to_path() {
   case "$SHELL" in
     */zsh)  profile="$HOME/.zshrc" ;;
     */bash) profile="$HOME/.bashrc" ;;
     *)      profile="$HOME/.profile" ;;
   esac
 
-  line='export PATH="$PATH:'"$INSTALL_DIR"'"'
-  if [ -f "$profile" ] && grep -qF "$INSTALL_DIR" "$profile" 2>/dev/null; then
-    echo "$INSTALL_DIR is already in $profile, skipping."
+  line='export PATH="$PATH:'"$PRESETS_DIR"'"'
+  if [ -f "$profile" ] && grep -qF "$PRESETS_DIR" "$profile" 2>/dev/null; then
+    echo "$PRESETS_DIR is already in $profile, skipping."
     return
   fi
-  printf '\n# ghostab\n%s\n' "$line" >> "$profile"
-  echo "Added $INSTALL_DIR to PATH in $profile"
+  printf '\n# ghostab presets\n%s\n' "$line" >> "$profile"
+  echo "Added $PRESETS_DIR to PATH in $profile"
 }
 
 main "$@"
